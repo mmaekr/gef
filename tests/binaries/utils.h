@@ -39,6 +39,5 @@
 
 /* the rest */
 #else
-#error "Unsupported architecture"
-// #define DebugBreak() __builtin_trap()
+#define DebugBreak() __builtin_trap()
 #endif
