@@ -233,7 +233,7 @@ def gef_print(*args: str, **kwargs: Dict) -> Optional[int]:
     """Wrapper around print(), using string buffering feature."""
     if gef.ui.stream_buffer and not is_debug():
         end = kwargs.get("end", "\n")
-        return gef.ui.stream_buffer.write(end.join([highlight_text(a) for a in args))
+        return gef.ui.stream_buffer.write(end.join([highlight_text(a) for a in args]))
     for a in args:
         print(highlight_text(a), **kwargs)
     return
@@ -1594,9 +1594,9 @@ def show_last_exception() -> None:
     gef_print("")
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
-    gef_print(" Exception raised ".center(80, HORIZONTAL_LINE))
-    gef_print(f"{Color.colorify(exc_type.__name__, 'bold underline red')}: {exc_value}")
-    gef_print(" Detailed stacktrace ".center(80, HORIZONTAL_LINE))
+    gef_print(" Exception raised ".center(80, HORIZONTAL_LINE),
+              f"{Color.colorify(exc_type.__name__, 'bold underline red')}: {exc_value}",
+              " Detailed stacktrace ".center(80, HORIZONTAL_LINE))
 
     for fs in traceback.extract_tb(exc_traceback)[::-1]:
         filename, lineno, method, code = fs
@@ -1611,10 +1611,10 @@ def show_last_exception() -> None:
     gdb.execute("version full")
     gef_print(" Last 10 GDB commands ".center(80, HORIZONTAL_LINE))
     gdb.execute("show commands")
-    gef_print(" Runtime environment ".center(80, HORIZONTAL_LINE))
-    gef_print(f"* GDB: {gdb.VERSION}")
-    gef_print(f"* Python: {sys.version_info.major:d}.{sys.version_info.minor:d}.{sys.version_info.micro:d} - {sys.version_info.releaselevel}")
-    gef_print(f"* OS: {platform.system()} - {platform.release()} ({platform.machine()})")
+    gef_print(" Runtime environment ".center(80, HORIZONTAL_LINE),
+              f"* GDB: {gdb.VERSION}",
+              f"* Python: {sys.version_info.major:d}.{sys.version_info.minor:d}.{sys.version_info.micro:d} - {sys.version_info.releaselevel}",
+              f"* OS: {platform.system()} - {platform.release()} ({platform.machine()})")
 
     try:
         lsb_release = which("lsb_release")
@@ -1622,8 +1622,7 @@ def show_last_exception() -> None:
     except FileNotFoundError:
         gef_print("lsb_release is missing, cannot collect additional debug information")
 
-    gef_print(HORIZONTAL_LINE*80)
-    gef_print("")
+    gef_print(HORIZONTAL_LINE*80, "")
     return
 
 
@@ -4617,10 +4616,10 @@ class VersionCommand(GenericCommand):
             gef_print(f"GEF: rev:{ver} (Git - {extra})")
         else:
             gef_blob_hash = subprocess.check_output(f"git hash-object {gef_fpath}", shell=True).decode().strip()
-            gef_print("GEF: (Standalone)")
-            gef_print(f"Blob Hash({gef_fpath}): {gef_blob_hash}")
-        gef_print(f"SHA256({gef_fpath}): {gef_hash}")
-        gef_print(f"GDB: {gdb.VERSION}")
+            gef_print("GEF: (Standalone)",
+                      f"Blob Hash({gef_fpath}): {gef_blob_hash}")
+        gef_print(f"SHA256({gef_fpath}): {gef_hash}",
+                  f"GDB: {gdb.VERSION}")
         py_ver = f"{sys.version_info.major:d}.{sys.version_info.minor:d}"
         gef_print(f"GDB-Python: {py_ver}")
 
@@ -4935,11 +4934,11 @@ class SmartEvalCommand(GenericCommand):
             try:
                 s_i = comp2_x(res)
                 s_i = s_i.rjust(len(s_i)+1, "0") if len(s_i)%2 else s_i
-                gef_print(f"{i:d}")
-                gef_print("0x" + comp2_x(res))
-                gef_print("0b" + comp2_b(res))
-                gef_print(f"{binascii.unhexlify(s_i)}")
-                gef_print(f"{binascii.unhexlify(s_i)[::-1]}")
+                gef_print(f"{i:d}",
+                          "0x" + comp2_x(res),
+                          "0b" + comp2_b(res),
+                          f"{binascii.unhexlify(s_i)}",
+                          f"{binascii.unhexlify(s_i)[::-1]}")
             except:
                 pass
             return
@@ -5049,9 +5048,9 @@ class ProcessStatusCommand(GenericCommand):
         info("Process Information")
         pid = gef.session.pid
         cmdline = self.get_cmdline_of(pid)
-        gef_print(f"\tPID {RIGHT_ARROW} {pid}")
-        gef_print(f"\tExecutable {RIGHT_ARROW} {self.get_process_path_of(pid)}")
-        gef_print(f"\tCommand line {RIGHT_ARROW} '{cmdline}'")
+        gef_print(f"\tPID {RIGHT_ARROW} {pid}",
+                  f"\tExecutable {RIGHT_ARROW} {self.get_process_path_of(pid)}",
+                  f"\tCommand line {RIGHT_ARROW} '{cmdline}'")
         return
 
     def show_ancestor(self) -> None:
@@ -5059,8 +5058,8 @@ class ProcessStatusCommand(GenericCommand):
         ppid = int(self.get_state_of(gef.session.pid)["PPid"])
         state = self.get_state_of(ppid)
         cmdline = self.get_cmdline_of(ppid)
-        gef_print(f"\tParent PID {RIGHT_ARROW} {state['Pid']}")
-        gef_print(f"\tCommand line {RIGHT_ARROW} '{cmdline}'")
+        gef_print(f"\tParent PID {RIGHT_ARROW} {state['Pid']}",
+                  f"\tCommand line {RIGHT_ARROW} '{cmdline}'")
         return
 
     def show_descendants(self) -> None:
@@ -5798,15 +5797,15 @@ class IdaInteractCommand(GenericCommand):
             return
 
         if meth is not None:
-            gef_print(titlify(meth))
-            gef_print(self.sock.system.methodHelp(meth))
+            gef_print(titlify(meth),
+                      self.sock.system.methodHelp(meth))
             return
 
         info("Listing available methods and syntax examples: ")
         for m in self.sock.system.listMethods():
             if m.startswith("system."): continue
-            gef_print(titlify(m))
-            gef_print(self.sock.system.methodHelp(m))
+            gef_print(titlify(m),
+                      self.sock.system.methodHelp(m))
         return
 
     def import_structures(self, structs: Dict[str, List[Tuple[int, str, int]]]) -> None:
@@ -6761,8 +6760,7 @@ class CapstoneDisassembleCommand(GenericCommand):
                 msg = Color.colorify(f"{RIGHT_ARROW}   {text_insn}", "bold red")
                 reason = self.capstone_analyze_pc(insn, length)[0]
                 if reason:
-                    gef_print(msg)
-                    gef_print(reason)
+                    gef_print(msg, reason)
                     break
             else:
                 msg = f"      {text_insn}"
@@ -7935,8 +7933,7 @@ class ElfInfoCommand(GenericCommand):
             Phdr.PF_R|Phdr.PF_W|Phdr.PF_X: Permission.ALL,
         }
 
-        gef_print("")
-        gef_print(titlify("Program Header"))
+        gef_print("", titlify("Program Header"))
 
         gef_print("  [{:>2s}] {:12s} {:>8s} {:>10s} {:>10s} {:>8s} {:>8s} {:5s} {:>8s}".format(
             "#", "Type", "Offset", "Virtaddr", "Physaddr", "FileSiz", "MemSiz", "Flags", "Align"))
@@ -7987,10 +7984,10 @@ class ElfInfoCommand(GenericCommand):
             Shdr.SHT_HIUSER:        "HIUSER",
         }
 
-        gef_print("")
-        gef_print(titlify("Section Header"))
-        gef_print("  [{:>2s}] {:20s} {:>15s} {:>10s} {:>8s} {:>8s} {:>8s} {:5s} {:4s} {:4s} {:>8s}".format(
-            "#", "Name", "Type", "Address", "Offset", "Size", "EntSiz", "Flags", "Link", "Info", "Align"))
+        gef_print("",
+                  titlify("Section Header"),
+                  "  [{:>2s}] {:20s} {:>15s} {:>10s} {:>8s} {:>8s} {:>8s} {:5s} {:4s} {:4s} {:>8s}".format(
+                      "#", "Name", "Type", "Address", "Offset", "Size", "EntSiz", "Flags", "Link", "Info", "Align"))
 
         for i, s in enumerate(elf.shdrs):
             sh_type = stype[s.sh_type] if s.sh_type in stype else "UNKNOWN"
@@ -8009,7 +8006,8 @@ class ElfInfoCommand(GenericCommand):
             if s.sh_flags & Shdr.SHF_COMPRESSED:       sh_flags += "C"
 
             gef_print("  [{:2d}] {:20s} {:>15s} {:#10x} {:#8x} {:#8x} {:#8x} {:5s} {:#4x} {:#4x} {:#8x}".format(
-                i, s.sh_name, sh_type, s.sh_addr, s.sh_offset, s.sh_size, s.sh_entsize, sh_flags, s.sh_link, s.sh_info, s.sh_addralign))
+                i, s.sh_name, sh_type, s.sh_addr, s.sh_offset, s.sh_size,
+                s.sh_entsize, sh_flags, s.sh_link, s.sh_info, s.sh_addralign))
         return
 
 
@@ -8191,8 +8189,7 @@ class ContextCommand(GenericCommand):
                                                               Color.colorify("Code", code_addr_color),
                                                               Color.colorify("Heap", heap_addr_color),
                                                               Color.colorify("Stack", stack_addr_color),
-                                                              Color.colorify("String", str_color)
-        ))
+                                                              Color.colorify("String", str_color)))
         return
 
     @only_if_gdb_running
@@ -9560,16 +9557,16 @@ class XAddressInfoCommand(GenericCommand):
 
         if sect:
             gef_print(f"Page: {format_address(sect.page_start)} {RIGHT_ARROW} "
-                      f"{format_address(sect.page_end)} (size={sect.page_end-sect.page_start:#x})")
-            gef_print(f"Permissions: {sect.permission}")
-            gef_print(f"Pathname: {sect.path}")
-            gef_print(f"Offset (from page): {addr.value-sect.page_start:#x}")
-            gef_print(f"Inode: {sect.inode}")
+                      f"{format_address(sect.page_end)} (size={sect.page_end-sect.page_start:#x})",
+                      f"Permissions: {sect.permission}",
+                      f"Pathname: {sect.path}",
+                      f"Offset (from page): {addr.value-sect.page_start:#x}",
+                      f"Inode: {sect.inode}")
 
         if info:
             gef_print(f"Segment: {info.name} "
-                      f"({format_address(info.zone_start)}-{format_address(info.zone_end)})")
-            gef_print(f"Offset (from segment): {addr.value-info.zone_start:#x}")
+                      f"({format_address(info.zone_start)}-{format_address(info.zone_end)})",
+                      f"Offset (from segment): {addr.value-info.zone_start:#x}")
 
         sym = gdb_get_location_from_symbol(address)
         if sym:
@@ -9620,11 +9617,10 @@ class XorMemoryDisplayCommand(GenericCommand):
         block = gef.memory.read(address, length)
         info(f"Displaying XOR-ing {address:#x}-{address + len(block):#x} with {key!r}")
 
-        gef_print(titlify("Original block"))
-        gef_print(hexdump(block, base=address))
-
-        gef_print(titlify("XOR-ed block"))
-        gef_print(hexdump(xor(block, key), base=address))
+        gef_print(titlify("Original block"),
+                  hexdump(block, base=address),
+                  titlify("XOR-ed block"),
+                  hexdump(xor(block, key), base=address))
         return
 
 
@@ -9713,13 +9709,13 @@ class TraceRunCommand(GenericCommand):
         loc_cur = loc_start
         frame_count_init = self.get_frames_size()
 
-        gef_print("#")
-        gef_print(f"# Execution tracing of {get_filepath()}")
-        gef_print(f"# Start address: {format_address(loc_start)}")
-        gef_print(f"# End address: {format_address(loc_end)}")
-        gef_print(f"# Recursion level: {depth:d}")
-        gef_print("# automatically generated by gef.py")
-        gef_print("#\n")
+        gef_print("#",
+                  f"# Execution tracing of {get_filepath()}",
+                  f"# Start address: {format_address(loc_start)}",
+                  f"# End address: {format_address(loc_end)}",
+                  f"# Recursion level: {depth:d}",
+                  "# automatically generated by gef.py",
+                  "#\n")
 
         while loc_cur != loc_end:
             try:
@@ -9734,10 +9730,10 @@ class TraceRunCommand(GenericCommand):
                 gdb.flush()
 
             except gdb.error as e:
-                gef_print("#")
-                gef_print(f"# Execution interrupted at address {format_address(loc_cur)}")
-                gef_print(f"# Exception: {e}")
-                gef_print("#\n")
+                gef_print("#",
+                          f"# Execution interrupted at address {format_address(loc_cur)}",
+                          f"# Exception: {e}",
+                          "#\n")
                 break
 
         return
@@ -10458,10 +10454,10 @@ class GefFunctionsCommand(GenericCommand):
 
     def do_invoke(self, argv) -> None:
         self.dont_repeat()
-        gef_print(titlify("GEF - Convenience Functions"))
-        gef_print("These functions can be used as arguments to other "
-                  "commands to dynamically calculate values\n")
-        gef_print(self.__doc__)
+        gef_print(titlify("GEF - Convenience Functions"),
+                  "These functions can be used as arguments to other "
+                  "commands to dynamically calculate values\n",
+                  self.__doc__)
         return
 
 
@@ -10642,8 +10638,8 @@ class GefHelpCommand(gdb.Command):
 
     def invoke(self, args, from_tty) -> None:
         self.dont_repeat()
-        gef_print(titlify("GEF - GDB Enhanced Features"))
-        gef_print(self.__doc__ or "")
+        gef_print(titlify("GEF - GDB Enhanced Features"),
+                  self.__doc__ or "")
         return
 
     def generate_help(self, commands: List[Tuple[str, Any, Any]]) -> None:
@@ -10733,8 +10729,8 @@ class GefConfigCommand(gdb.Command):
         gef_print(f"{_setting} ({_type}) = {_value}")
 
         if verbose:
-            gef_print(Color.colorify("\nDescription:", "bold underline"))
-            gef_print(f"\t{res.description}")
+            gef_print(Color.colorify("\nDescription:", "bold underline"),
+                      f"\t{res.description}")
         return
 
     def print_settings(self) -> None:
