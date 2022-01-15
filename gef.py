@@ -229,12 +229,14 @@ def highlight_text(text: str) -> str:
     return "".join(ansiSplit)
 
 
-def gef_print(x: str = "", *args: Tuple, **kwargs: Dict[str, Any]) -> Optional[int]:
-    """Wrapper around `print()`, using string buffering feature."""
-    x = highlight_text(x)
+def gef_print(*args: str, **kwargs: Dict) -> Optional[int]:
+    """Wrapper around print(), using string buffering feature."""
     if gef.ui.stream_buffer and not is_debug():
-        return gef.ui.stream_buffer.write(x + kwargs.get("end", "\n"))
-    return print(x, *args, **kwargs)
+        end = kwargs.get("end", "\n")
+        return gef.ui.stream_buffer.write(end.join([highlight_text(a) for a in args))
+    for a in args:
+        print(highlight_text(a), **kwargs)
+    return
 
 
 def bufferize(f: Callable) -> Callable:
